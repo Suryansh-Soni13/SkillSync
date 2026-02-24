@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile | SkillSync</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="dashboard.html" class="logo">Skill<span>Sync</span></a>
+            <div id="user-nav" style="display: flex; gap: 1.5rem; align-items: center;">
+                <span id="user-name" style="font-weight: 600; color: var(--text-muted);">Loading...</span>
+                <button id="logout-btn" class="btn btn-outline"
+                    style="padding: 0.5rem 1rem; font-size: 0.8rem;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="padding: 40px 0;">
+        <div class="grid grid-3">
+            <!-- Sidebar -->
+            <div style="grid-column: span 1;">
+                <div class="card" style="padding: 1.5rem;">
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <li><a href="dashboard.html" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-home"></i> Home</a></li>
+                        <li><a href="search.html" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-search"></i> Find Teammates</a></li>
+                        <li><a href="find_teams.html" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-users"></i> Browse Teams</a></li>
+                        <li><a href="messages.html" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-envelope"></i> Messages</a></li>
+                        <li><a href="profile.html" class="btn btn-primary"
+                                style="width: 100%; justify-content: flex-start;"><i class="fas fa-user-circle"></i>
+                                Profile</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div style="grid-column: span 2;">
+                <div style="margin-bottom: 2rem;">
+                    <h1 style="font-size: 2rem;">User Profile</h1>
+                    <p style="color: var(--text-muted);">Update your information and portfolio links.</p>
+                </div>
+
+                <div class="card">
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" id="fullname" class="input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Bio / About Me</label>
+                            <textarea id="bio" class="input" style="height: 120px; resize: vertical;"
+                                placeholder="Tell us about yourself..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Skills (Comma separated)</label>
+                            <input type="text" id="skills" class="input" placeholder="React, Node.js, UI Design">
+                        </div>
+
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">GitHub Profile</label>
+                                <input type="url" id="github" class="input"
+                                    placeholder="https://github.com/yourusername">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">LinkedIn Profile</label>
+                                <input type="url" id="linkedin" class="input"
+                                    placeholder="https://linkedin.com/in/yourusername">
+                            </div>
+                        </div>
+
+                        <button type="submit" id="save-btn" class="btn btn-primary"
+                            style="width: 100%; margin-top: 1.5rem;">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+        let currentUserId = null;
+
+        async function loadProfile() {
+            const user = await checkAuth();
+            if (!user) return;
+            currentUserId = user.id;
+
+            const profile = await getProfile(user.id);
+            if (profile) {
+                document.getElementById('user-name').innerText = profile.full_name;
+                document.getElementById('fullname').value = profile.full_name;
+                document.getElementById('bio').value = profile.bio || '';
+                document.getElementById('skills').value = profile.skills || '';
+                document.getElementById('github').value = profile.github_profile || '';
+                document.getElementById('linkedin').value = profile.linkedin_profile || '';
+            }
+        }
+
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('save-btn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            btn.disabled = true;
+
+            const updates = {
+                full_name: document.getElementById('fullname').value,
+                bio: document.getElementById('bio').value,
+                skills: document.getElementById('skills').value,
+                github_profile: document.getElementById('github').value,
+                linkedin_profile: document.getElementById('linkedin').value,
+                updated_at: new Date()
+            };
+
+            const { error } = await supabase
+                .from('users')
+                .update(updates)
+                .eq('id', currentUserId);
+
+            if (error) {
+                alert('Error updating profile: ' + error.message);
+            } else {
+                alert('Profile updated successfully!');
+            }
+
+            btn.innerHTML = 'Save Changes';
+            btn.disabled = false;
+        });
+
+        loadProfile();
+    </script>
+</body>
+
+</html>

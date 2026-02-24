@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | SkillSync</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="dashboard.html" class="logo">Skill<span>Sync</span></a>
+            <div id="user-nav" style="display: flex; gap: 1.5rem; align-items: center;">
+                <span id="user-name" style="font-weight: 600; color: var(--text-muted);">Loading...</span>
+                <button id="logout-btn" class="btn btn-outline"
+                    style="padding: 0.5rem 1rem; font-size: 0.8rem;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="padding: 40px 0;">
+        <div class="grid grid-3">
+            <!-- Sidebar -->
+            <div style="grid-column: span 1;">
+                <div class="card" style="padding: 1.5rem;">
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <li><a href="dashboard.html" class="btn btn-primary"
+                                style="width: 100%; justify-content: flex-start;"><i class="fas fa-home"></i> Home</a>
+                        </li>
+                        <li><a href="#" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-users"></i> My Teams</a></li>
+                        <li><a href="#" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-search"></i> Find Experts</a></li>
+                        <li><a href="#" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-envelope"></i> Messages</a></li>
+                        <li><a href="#" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-user-circle"></i> Profile</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div style="grid-column: span 2;">
+                <div style="margin-bottom: 2rem;">
+                    <h1 style="font-size: 2rem;">Student Console</h1>
+                    <p style="color: var(--text-muted);">Connect with experts and build your next big thing.</p>
+                </div>
+
+                <div class="grid grid-2" style="margin-bottom: 2rem;">
+                    <div class="card" style="padding: 1.5rem; border-left: 4px solid var(--primary);">
+                        <h4 style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Active Teams
+                        </h4>
+                        <p style="font-size: 2rem; font-weight: 800;">0</p>
+                    </div>
+                    <div class="card" style="padding: 1.5rem; border-left: 4px solid var(--secondary);">
+                        <h4 style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Unread
+                            Messages</h4>
+                        <p style="font-size: 2rem; font-weight: 800;">0</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3>Available Projects</h3>
+                        <button class="btn btn-primary" style="font-size: 0.8rem;">Create Project Team</button>
+                    </div>
+
+                    <div id="projects-list">
+                        <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                            <i class="fas fa-project-diagram"
+                                style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.2;"></i>
+                            <p>No projects found. Be the first to start a team!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script>
+        async function checkAuth() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Get profile
+            const { data: profile } = await supabase
+                .from('users')
+                .select('full_name')
+                .eq('id', user.id)
+                .single();
+
+            document.getElementById('user-name').innerText = profile ? profile.full_name : user.email;
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        });
+
+        checkAuth();
+    </script>
+</body>
+
+</html>

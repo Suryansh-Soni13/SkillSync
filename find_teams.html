@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Projects | SkillSync</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="dashboard.html" class="logo">Skill<span>Sync</span></a>
+            <div id="user-nav" style="display: flex; gap: 1.5rem; align-items: center;">
+                <span id="user-name" style="font-weight: 600; color: var(--text-muted);">Loading...</span>
+                <button id="logout-btn" class="btn btn-outline"
+                    style="padding: 0.5rem 1rem; font-size: 0.8rem;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="padding: 40px 0;">
+        <div class="grid grid-3">
+            <!-- Sidebar -->
+            <div style="grid-column: span 1;">
+                <div class="card" style="padding: 1.5rem;">
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <li><a href="dashboard.html" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-home"></i> Home</a></li>
+                        <li><a href="search.html" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-search"></i> Find Teammates</a></li>
+                        <li><a href="find_teams.html" class="btn btn-primary"
+                                style="width: 100%; justify-content: flex-start;"><i class="fas fa-users"></i> Browse
+                                Teams</a></li>
+                        <li><a href="messages.html" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-envelope"></i> Messages</a></li>
+                        <li><a href="profile.html" class="btn btn-outline"
+                                style="width: 100%; justify-content: flex-start; border: none;"><i
+                                    class="fas fa-user-circle"></i> Profile</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div style="grid-column: span 2;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div>
+                        <h1 style="font-size: 2rem;">Project Teams</h1>
+                        <p style="color: var(--text-muted);">Find a team and start building together.</p>
+                    </div>
+                    <button class="btn btn-primary">Create Team</button>
+                </div>
+
+                <div id="teams-grid" class="grid grid-2">
+                    <!-- Dynamic Teams -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script>
+        async function loadTeams() {
+            const teamsGrid = document.getElementById('teams-grid');
+            teamsGrid.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            const { data, error } = await supabase
+                .from('projects')
+                .select('*, leader:users(full_name)')
+                .eq('is_public', true)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                teamsGrid.innerHTML = 'Error loading teams.';
+                return;
+            }
+
+            if (data.length === 0) {
+                teamsGrid.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 2rem; color: var(--text-muted);">No public teams available.</div>';
+                return;
+            }
+
+            teamsGrid.innerHTML = data.map(team => `
+                <div class="card" style="padding: 1.5rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <span style="font-size: 0.7rem; background: rgba(16, 185, 129, 0.1); color: var(--secondary); padding: 0.2rem 0.6rem; border-radius: 100px; font-weight: 600;">ACTIVE</span>
+                    </div>
+                    <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">${team.title}</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                        ${team.description}
+                    </p>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Required Skills</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            ${(team.required_skills || '').split(',').map(skill => `<span style="font-size: 0.7rem; background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid var(--border);">${skill.trim()}</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <div style="font-size: 0.8rem;">
+                            <span style="color: var(--text-muted);">Leader:</span> <strong>${team.leader.full_name}</strong>
+                        </div>
+                        <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.75rem;">Request to Join</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize
+        checkAuth().then(user => {
+            if (user) {
+                loadTeams();
+                getProfile(user.id).then(p => {
+                    document.getElementById('user-name').innerText = p ? p.full_name : 'User';
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
